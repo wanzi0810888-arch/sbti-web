@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBTI 导师确诊器 Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 添加一点漫画风的弹出动效 */
+        @keyframes comicPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .comic-pop {
+            animation: comicPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex items-center justify-center p-6 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNlMmU4ZjAiIGZpbGwtb3BhY2l0eT0iMC40Ii8+PC9zdmc+')]">
+
+    <!-- 封面页 -->
+    <div id="start-screen" class="flex flex-col items-center justify-center w-full max-w-md text-center comic-pop">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full border-2 border-slate-800 relative overflow-hidden">
+            <!-- 封面漫画头像 -->
+            <img src="https://api.dicebear.com/7.x/micah/svg?seed=Boss&backgroundColor=ffdfbf" class="w-28 h-28 mx-auto mb-6 rounded-full border-4 border-slate-800 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] hover:scale-110 transition-transform cursor-pointer" alt="封面头像">
+            
+            <h1 class="text-3xl font-black mb-4 tracking-tight text-slate-900 drop-shadow-sm">导师确诊器 Pro</h1>
+            <div class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full mb-6 border border-blue-200">
+                32题深度版 · 16型漫画画像
+            </div>
+            <p class="text-slate-600 mb-8 text-sm leading-relaxed font-medium">
+                你以为你是良师益友？<br/>
+                在新人眼里，你可能只是个“画饼老妈子”。<br/>
+                <span class="text-xs text-slate-400 mt-2 block">(SBTI 导师自黑专版，测完请勿对号入座)</span>
+            </p>
+            <button onclick="startTest()" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white font-black rounded-2xl text-lg transition-all shadow-[0px_6px_0px_0px_rgba(15,23,42,1)] hover:translate-y-1 hover:shadow-[0px_2px_0px_0px_rgba(15,23,42,1)] active:translate-y-2 active:shadow-none flex items-center justify-center gap-2">
+                开始 32 题深度审判 <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="question-screen" class="hidden flex-col items-center justify-center w-full max-w-md">
+        <!-- 进度条 -->
+        <div class="flex flex-col w-full mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-2">
+                <span id="q-counter" class="text-slate-600 font-black text-sm">深度测试 1 / 32</span>
+                <span id="q-progress-text" class="text-slate-800 font-black text-sm">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3 border border-slate-200 overflow-hidden">
+                <div id="q-progress-bar" class="bg-slate-800 h-full rounded-full transition-all duration-300 ease-out relative" style="width: 0%">
+                    <div class="absolute top-0 left-0 w-full h-full bg-white/20"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 题目区域 -->
+        <div class="bg-white p-8 rounded-3xl shadow-md border-2 border-slate-800 mb-6 min-h-[180px] flex items-center relative w-full comic-pop" id="q-container">
+            <h2 id="q-text" class="text-xl font-black leading-relaxed text-slate-800 relative z-10 w-full">加载中...</h2>
+        </div>
+
+        <!-- 选项区域 -->
+        <div id="options-container" class="space-y-4 w-full">
+            <!-- 动态生成选项 -->
+        </div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="result-screen" class="hidden flex-col items-center justify-center w-full max-w-md py-12">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full text-center border-2 border-slate-800 relative comic-pop">
+            
+            <!-- 漫画人物形象 (使用 DiceBear API) -->
+            <div class="w-32 h-32 rounded-full border-4 border-slate-800 shadow-[6px_6px_0px_0px_rgba(30,41,59,1)] mx-auto mb-8 relative z-10 bg-white overflow-hidden">
+                <img id="r-avatar" src="" class="w-full h-full object-cover scale-110 mt-2" alt="确诊漫画形象">
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-slate-800 px-3 py-1 rounded-full text-[10px] font-black text-white whitespace-nowrap border-2 border-white">
+                    确诊形象
+                </div>
+            </div>
+            
+            <p class="text-slate-500 text-sm font-black tracking-widest mb-2 flex items-center justify-center gap-1 mt-2">
+                <i data-lucide="sparkles" class="w-4 h-4 text-yellow-500"></i> 你的带教确诊为
+            </p>
+            <h2 id="r-type" class="text-6xl font-black mb-2 text-slate-900 tracking-tighter drop-shadow-md">SBTI</h2>
+            <h3 id="r-title" class="text-2xl font-black text-slate-800 mb-6 bg-yellow-200 inline-block px-4 py-1 rounded-lg border-2 border-slate-800 transform -rotate-2">"纯血电子摆设"</h3>
+            
+            <!-- 维度解析 -->
+            <div class="grid grid-cols-2 gap-3 mb-6 text-xs text-slate-700 text-left">
+                <div id="r-dim1" class="bg-slate-50 p-3 rounded-xl border-2 border-slate-200 font-bold"></div>
+                <div id="r-dim2" class="bg-slate-50 p-3 rounded-xl border-2 border-slate-200 font-bold"></div>
+                <div id="r-dim3" class="bg-slate-50 p-3 rounded-xl border-2 border-slate-200 font-bold"></div>
+                <div id="r-dim4" class="bg-slate-50 p-3 rounded-xl border-2 border-slate-200 font-bold"></div>
+            </div>
+
+            <!-- 专属画像描述 -->
+            <div class="bg-blue-50 p-5 rounded-2xl mb-8 text-left border-2 border-blue-200 relative">
+                <div class="absolute -top-3 -left-3 bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-black border-2 border-slate-800 shadow-sm">!</div>
+                <p class="text-slate-700 leading-relaxed text-sm font-medium">
+                    <strong class="text-slate-900 font-black">职场素描：</strong><span id="r-persona"></span>
+                </p>
+            </div>
+
+            <!-- 按钮区 -->
+            <div class="flex gap-4">
+                <button onclick="resetTest()" class="flex-1 py-3.5 bg-white border-2 border-slate-800 hover:bg-slate-100 text-slate-800 font-black rounded-xl transition-all shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] active:translate-y-1 active:shadow-none flex items-center justify-center gap-2">
+                    <i data-lucide="refresh-ccw" class="w-4 h-4"></i> 重测
+                </button>
+                <button onclick="alert('截图分享给朋友，或者直接复制网页链接发给他们吧！')" class="flex-[2] py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-black rounded-xl transition-all shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] active:translate-y-1 active:shadow-none flex items-center justify-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4"></i> 炫耀确诊单
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const QUESTIONS = [
+            { dim: 'dim1', q: "1. 给新人布置第一项任务时，你的真实操作是？", options: [{ text: "丢个历史文档过去：“你先看看，不懂再问我。”", value: 'A' }, { text: "恨不得帮他建好文件夹，把每一步的快捷键都写在文档里。", value: 'B' }] },
+            { dim: 'dim2', q: "2. 新人委屈巴巴地抱怨活儿太多、工资太低，你会？", options: [{ text: "“这都是积累！等这个项目做完，我跟老板申请给你加薪！”", value: 'A' }, { text: "“现在的年轻人就是吃不了苦，想当年我刚毕业的时候……”", value: 'B' }] },
+            { dim: 'dim3', q: "3. 交代给新人的活儿，离Deadline还有两天，你的状态是？", options: [{ text: "一天问八遍：“进度怎么样了？卡在哪了？今天能给我看一版吗？”", value: 'A' }, { text: "默默在心里祈祷他别搞砸，甚至已经熬夜偷偷做了一个备用版本。", value: 'B' }] },
+            { dim: 'dim4', q: "4. 跨部门开会，别的部门把锅甩给你的新人，你会？", options: [{ text: "假装看手机，心想：“你自己惹的祸自己解决，别连累我。”", value: 'A' }, { text: "陪着笑脸疯狂道歉：“对不起对不起，新人不懂事，我回去立刻让他改。”", value: 'B' }] },
+            { dim: 'dim1', q: "5. 看到新人操作软件的方法极其笨拙，你会？", options: [{ text: "只要结果是对的，管他用什么方法，我闭上眼睛眼不见为净。", value: 'A' }, { text: "血压飙升，一把夺过鼠标：“起开，看我怎么弄的！”", value: 'B' }] },
+            { dim: 'dim2', q: "6. 年底绩效面谈，你的开场白通常是？", options: [{ text: "“公司明年有大动作，你是核心骨干，期权少不了你的。”", value: 'A' }, { text: "“我对你这半年的成长不是很满意，你需要多从自己身上找原因。”", value: 'B' }] },
+            { dim: 'dim3', q: "7. 新人交上来的方案一塌糊涂，你的第一反应是？", options: [{ text: "瞬间暴怒，在群里连发三条语音激情输出。", value: 'A' }, { text: "深呼吸，掐人中，在心里默念三遍“我自己招的，我自己招的”。", value: 'B' }] },
+            { dim: 'dim4', q: "8. 大老板突然来视察工作，问起项目进度，你会？", options: [{ text: "立刻把新人推到前面：“老板，这个项目一直是小王在跟，让他给您汇报！”", value: 'A' }, { text: "结结巴巴地替新人挡枪，生怕他说错话连累整个部门被骂。", value: 'B' }] },
+            { dim: 'dim1', q: "9. 新人写周报，你的要求是？", options: [{ text: "“随便写两句就行，反正我也不看。”", value: 'A' }, { text: "“必须精确到每天的每个小时，并且要有数据支撑和复盘。”", value: 'B' }] },
+            { dim: 'dim2', q: "10. 团建聚餐时的发言，你最喜欢说？", options: [{ text: "“大家敞开吃！明年咱们部门业绩翻倍，带大家去马尔代夫！”", value: 'A' }, { text: "“通过这次聚餐，我希望大家能深刻反思一下最近的工作状态……”", value: 'B' }] },
+            { dim: 'dim3', q: "11. 客户突然改需求，你会怎么跟新人说？", options: [{ text: "“别废话了，今晚通宵也得给我改出来！”", value: 'A' }, { text: "强颜欢笑安抚新人，转头自己去厕所偷偷抹眼泪。", value: 'B' }] },
+            { dim: 'dim4', q: "12. 新人惹怒了重要客户，你会？", options: [{ text: "“你自己去跟客户解释，搞不定就别回来了。”", value: 'A' }, { text: "买好咖啡和果篮，带着新人去客户公司负荆请罪。", value: 'B' }] },
+            { dim: 'dim1', q: "13. 新人请假一天，工作交接你会怎么处理？", options: [{ text: "“去吧去吧，天塌下来有高个子顶着。”", value: 'A' }, { text: "提前三天拉群，列出详细的交接清单，甚至休假期间还给他发微信。", value: 'B' }] },
+            { dim: 'dim2', q: "14. 新人完成了一个小项目，你会怎么评价？", options: [{ text: "“太棒了！你简直是百年难遇的天才，下一个总监就是你！”", value: 'A' }, { text: "“还行吧，但离我的标准还差得远，这里、这里和这里都不对。”", value: 'B' }] },
+            { dim: 'dim3', q: "15. 发现新人犯了低级错误，你会？", options: [{ text: "拍桌子大吼：“这种错误你也能犯？你带脑子来上班了吗？”", value: 'A' }, { text: "默默帮他改掉，然后一整天都郁郁寡欢，觉得带人太累了。", value: 'B' }] },
+            { dim: 'dim4', q: "16. 部门背了黑锅，大老板发火，你会？", options: [{ text: "完美隐身，连夜请病假。", value: 'A' }, { text: "写了一份八千字的检讨书，主动承担所有责任。", value: 'B' }] },
+            { dim: 'dim1', q: "17. 审批新人的报销单时，你的习惯是？", options: [{ text: "只要总金额不离谱，直接闭眼点“同意”。", value: 'A' }, { text: "拿着计算器一笔笔核对发票，连打车的时间都要问清楚。", value: 'B' }] },
+            { dim: 'dim2', q: "18. 部门开早会，你的主要内容是？", options: [{ text: "描绘公司上市后的美好蓝图，给大家打鸡血。", value: 'A' }, { text: "挨个点名批评昨天做错事的人，强调纪律和规矩。", value: 'B' }] },
+            { dim: 'dim3', q: "19. 晚上10点突然想起一件事，你会？", options: [{ text: "毫不犹豫地给新人打电话，不管他是不是在睡觉。", value: 'A' }, { text: "拿起手机又放下，心想“算了，明天再说吧，别把人逼急了”。", value: 'B' }] },
+            { dim: 'dim4', q: "20. 需要去别的部门要资源，你会？", options: [{ text: "派新人去：“这是锻炼你沟通能力的好机会。”", value: 'A' }, { text: "自己跑去别的部门装孙子、求爷爷告奶奶。", value: 'B' }] },
+            { dim: 'dim1', q: "21. 新人做PPT的排版，你会？", options: [{ text: "“内容对就行，美观度无所谓。”", value: 'A' }, { text: "“标题字号必须是24，行距1.5，颜色用公司标准蓝，差一像素都不行！”", value: 'B' }] },
+            { dim: 'dim2', q: "22. 新人问你关于未来的职业发展，你会？", options: [{ text: "“跟着我干，三年买车五年买房不是梦！”", value: 'A' }, { text: "“年轻人不要好高骛远，先把你手头那点破事做好再说。”", value: 'B' }] },
+            { dim: 'dim3', q: "23. 新人工作进度太慢，你会？", options: [{ text: "站在他背后盯着他做，每隔五分钟催一次。", value: 'A' }, { text: "实在看不下去，一把抢过来：“算了算了，我自己来吧！”", value: 'B' }] },
+            { dim: 'dim4', q: "24. 别的团队想借调你的新人去干杂活，你会？", options: [{ text: "“随便借，反正他在我这也帮不上什么忙。”", value: 'A' }, { text: "像护犊子一样跟别的团队吵架：“我们自己活都干不完，不借！”", value: 'B' }] },
+            { dim: 'dim1', q: "25. 新人下班时间到了，你会？", options: [{ text: "“到点了还不走？那我先走了拜拜。”", value: 'A' }, { text: "默默观察他电脑屏幕，看他是不是在摸鱼，或者给他派点“顺手”的活。", value: 'B' }] },
+            { dim: 'dim2', q: "26. 看到新人上班时间偶尔摸鱼，你会？", options: [{ text: "走过去拍拍肩膀：“劳逸结合嘛，但别忘了咱们年底的大目标哦！”", value: 'A' }, { text: "阴阳怪气：“看来你的工作量还是太不饱和了啊。”", value: 'B' }] },
+            { dim: 'dim3', q: "27. 项目上线前夜，你的状态是？", options: [{ text: "像个陀螺一样满场飞奔，疯狂催促所有人。", value: 'A' }, { text: "紧张到胃痛，吃不下饭，生怕哪里出岔子。", value: 'B' }] },
+            { dim: 'dim4', q: "28. 新人发错邮件到全员群，造成了尴尬，你会？", options: [{ text: "假装没看见，甚至在群里跟着发个“？”撇清关系。", value: 'A' }, { text: "赶紧在群里发个红包或者搞笑表情包，试图转移大家的注意力。", value: 'B' }] },
+            { dim: 'dim1', q: "29. 遇到新人求助说“这个我不会”，你会？", options: [{ text: "“去百度，去问别人，别来烦我。”", value: 'A' }, { text: "叹口气，然后手把手从盘古开天辟地开始教起。", value: 'B' }] },
+            { dim: 'dim2', q: "30. 新人想离职，你会怎么挽留？", options: [{ text: "“别走啊！我正准备提拔你当组长呢，马上就批下来了！”", value: 'A' }, { text: "“你现在出去能找到什么好工作？外面的环境比这儿残酷多了。”", value: 'B' }] },
+            { dim: 'dim3', q: "31. 新人请教你一个问题，你讲了一遍他没懂，你会？", options: [{ text: "提高八度音量：“这么简单你都听不懂？！”", value: 'A' }, { text: "感到深深的无力感，怀疑是不是自己的表达能力有问题。", value: 'B' }] },
+            { dim: 'dim4', q: "32. 年终评优，你们部门只有一个名额，你会？", options: [{ text: "毫不犹豫地给自己申报。", value: 'A' }, { text: "纠结半天，最后把名额让给新人，自己偷偷心酸。", value: 'B' }] }
+        ];
+
+        const RESULTS = {
+            SBTI: { title: "纯血电子摆设", persona: "职场渣男本渣。只提要求不给资源，大饼画得比谁都圆，催命催得比谁都急，一出事跑得比谁都快。新人遇到你，算是踢到钢板了。" },
+            SBTC: { title: "虚张声势的草包", persona: "表面上运筹帷幄大饼乱飞，实际上外强中干。平时不管事只管催，新人一出事，你就得去给别的部门老板下跪道歉。" },
+            SBFI: { title: "脆皮画饼王", persona: "喜欢给新人勾勒宏大蓝图，但自己内心极其脆弱。新人一犯错你先心态崩了，然后默默消失，留新人独自在风中凌乱。" },
+            SBFC: { title: "委屈的梦想家", persona: "给新人画饼结果自己先信了。平时放养，新人搞砸后，你一边在工位上委屈得想哭，一边还要帮着熬夜擦屁股补救。" },
+            SPTI: { title: "赛博念经机", persona: "只动嘴皮子不动手。天天催命加说教，满嘴“想当年”，真要担责时人影都没了，主打一个精神污染。" },
+            SPTC: { title: "嘴强王者", persona: "平时高高在上指点江山，批评新人头头是道。结果新人闯祸后，你只能收起架子，卑微地去别的部门赔笑脸。" },
+            SPFI: { title: "玻璃心老学究", persona: "满嘴大道理，但承受不了一点挫折。新人不听话你就自己生闷气，觉得这届年轻人带不动，然后开始摆烂玩消失。" },
+            SPFC: { title: "口嫌体正老父亲", persona: "嘴上骂骂咧咧说现在的年轻人不行，背地里却心软得一塌糊涂。一边破防叹气，一边熬夜帮新人改PPT。" },
+            MBTI: { title: "窒息型黑心包工头", persona: "管得极宽，催得极紧，画着大饼，但绝不替新人背半点黑锅。你已经完全掌握了资本家的核心科技。" },
+            MBTC: { title: "精神分裂背锅侠", persona: "又想控制一切又爱画饼，天天催命。结果出了事还得自己低三下四去道歉。又菜又爱玩，说的就是你。" },
+            MBFI: { title: "拧巴的控制狂", persona: "连标点符号都要管，但内心极其脆弱。一出问题就破防，然后把烂摊子丢给别人，是个让人捉摸不透的矛盾体。" },
+            MBFC: { title: "奉献型大冤种", persona: "事必躬亲，给新人画饼也给自己画。新人做不好你气个半死，最后还是自己一边吐血一边把活干了。" },
+            MPTI: { title: "职场教导主任", persona: "连呼吸频率都要管，边管边骂，催命第一名，担责最后一名。新人在你手下每天都像在军训。" },
+            MPTC: { title: "暴躁的老黄牛", persona: "脾气大规矩多，天天骂新人笨。但最后还是自己一边骂骂咧咧，一边把活干了去交差，典型的劳碌命。" },
+            MPFI: { title: "高敏感教官", persona: "极度挑剔，喜欢说教，但心理素质极差。遇到上级问责立刻甩锅给新人，主打一个“严以待人，宽以待己”。" },
+            MPFC: { title: "感动自己的老妈子", persona: "管得比妈宽，说得比爹多。新人搞砸了自己默默破防，最后还是得自己去擦屁股。你不是在带新人，你是在渡劫。" }
+        };
+
+        let currentQ = 0;
+        let answers = { dim1: { A: 0, B: 0 }, dim2: { A: 0, B: 0 }, dim3: { A: 0, B: 0 }, dim4: { A: 0, B: 0 } };
+
+        function startTest() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('question-screen').style.display = 'flex';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = QUESTIONS[currentQ];
+            const progress = Math.round(((currentQ + 1) / QUESTIONS.length) * 100);
+
+            document.getElementById('q-counter').innerText = `深度测试 ${currentQ + 1} / ${QUESTIONS.length}`;
+            document.getElementById('q-progress-text').innerText = `${progress}%`;
+            document.getElementById('q-progress-bar').style.width = `${progress}%`;
+            
+            // 重新触发动画
+            const qContainer = document.getElementById('q-container');
+            qContainer.classList.remove('comic-pop');
+            void qContainer.offsetWidth; // 触发重绘
+            qContainer.classList.add('comic-pop');
+            
+            document.getElementById('q-text').innerText = q.q;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-5 bg-white border-2 border-slate-800 hover:bg-yellow-50 rounded-2xl transition-all shadow-[0px_4px_0px_0px_rgba(30,41,59,1)] hover:translate-y-1 hover:shadow-[0px_2px_0px_0px_rgba(30,41,59,1)] active:translate-y-2 active:shadow-none mb-4 group";
+                btn.onclick = () => handleAnswer(q.dim, opt.value);
+                btn.innerHTML = `<span class="text-slate-800 font-black leading-relaxed block group-hover:text-slate-900">${opt.text}</span>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(dim, value) {
+            answers[dim][value]++;
+            if (currentQ < QUESTIONS.length - 1) {
+                currentQ++;
+                showQuestion();
+            } else {
+                calculateResult();
+            }
+        }
+
+        function calculateResult() {
+            let type = '';
+            type += answers.dim1.A >= answers.dim1.B ? 'S' : 'M';
+            type += answers.dim2.A >= answers.dim2.B ? 'B' : 'P';
+            type += answers.dim3.A >= answers.dim3.B ? 'T' : 'F';
+            type += answers.dim4.A >= answers.dim4.B ? 'I' : 'C';
+
+            showResult(type);
+        }
+
+        function showResult(type) {
+            document.getElementById('question-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'flex';
+
+            const res = RESULTS[type];
+
+            // 动态生成漫画头像 (使用类型名字作为 seed，确保每种类型头像固定且不同)
+            const avatarUrl = `https://api.dicebear.com/7.x/micah/svg?seed=${type}Mentor&backgroundColor=transparent`;
+            document.getElementById('r-avatar').src = avatarUrl;
+            
+            document.getElementById('r-type').innerText = type;
+            document.getElementById('r-title').innerText = `"${res.title}"`;
+
+            const dimNames = {
+                S: '(甩手掌柜)', M: '(微操狂魔)',
+                B: '(画饼大师)', P: '(爹味说教)',
+                T: '(急急国王)', F: '(破防保姆)',
+                I: '(隐身遁地)', C: '(擦腚小丑)'
+            };
+
+            document.getElementById('r-dim1').innerHTML = `<span class="text-slate-900 font-black text-sm mr-1">${type[0]}</span> ${dimNames[type[0]]}`;
+            document.getElementById('r-dim2').innerHTML = `<span class="text-slate-900 font-black text-sm mr-1">${type[1]}</span> ${dimNames[type[1]]}`;
+            document.getElementById('r-dim3').innerHTML = `<span class="text-slate-900 font-black text-sm mr-1">${type[2]}</span> ${dimNames[type[2]]}`;
+            document.getElementById('r-dim4').innerHTML = `<span class="text-slate-900 font-black text-sm mr-1">${type[3]}</span> ${dimNames[type[3]]}`;
+
+            document.getElementById('r-persona').innerText = res.persona;
+
+            lucide.createIcons();
+        }
+
+        function resetTest() {
+            currentQ = 0;
+            answers = { dim1: { A: 0, B: 0 }, dim2: { A: 0, B: 0 }, dim3: { A: 0, B: 0 }, dim4: { A: 0, B: 0 } };
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
